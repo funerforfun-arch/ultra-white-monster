@@ -1,0 +1,21 @@
+
+{
+  "expo": {
+    "name": "Ultra White",
+    "slug": "ultra-white-monster",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yohan.ultrawhite"
+    },
+    "android": {
+      "package": "com.yohan.ultrawhite",
+      "adaptiveIcon": {
+        "backgroundColor": "#050706"
+      }
+    }
+  }
+}
