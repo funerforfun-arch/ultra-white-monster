@@ -1,3 +1,4 @@
+
 {
   "expo": {
     "name": "Ultra White",
@@ -6,6 +7,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
+    "icon": "./assets/icon.png",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.yohan.ultrawhite",
