@@ -1,0 +1,62 @@
+name: Build unsigned iOS IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install JavaScript dependencies
+        run: npm ci
+      - name: Generate native iOS project
+        run: npx expo prebuild --platform ios --no-install
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install
+      - name: Build unsigned iPhone app and package IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORKSPACE="$(find ios -maxdepth 1 -name '*.xcworkspace' -print -quit)"
+          if [ -z "$WORKSPACE" ]; then
+            echo "No Xcode workspace found."
+            exit 1
+          fi
+          SCHEME="$(xcodebuild -list -json -workspace "$WORKSPACE" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["workspace"]["schemes"][0])')"
+          echo "Using workspace: $WORKSPACE"
+          echo "Using scheme: $SCHEME"
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$GITHUB_WORKSPACE/ios-build" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+          APP_PATH="$(find "$GITHUB_WORKSPACE/ios-build/Build/Products/Release-iphoneos" -maxdepth 1 -name '*.app' -print -quit)"
+          if [ -z "$APP_PATH" ]; then
+            echo "No iPhone .app found."
+            exit 1
+          fi
+          mkdir -p "$GITHUB_WORKSPACE/ipa/Payload"
+          cp -R "$APP_PATH" "$GITHUB_WORKSPACE/ipa/Payload/"
+          cd "$GITHUB_WORKSPACE/ipa"
+          zip -r "$GITHUB_WORKSPACE/Ultra-White-unsigned.ipa" Payload
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ultra-White-unsigned-IPA
+          path: Ultra-White-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 7
